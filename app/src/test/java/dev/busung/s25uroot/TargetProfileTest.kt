@@ -138,11 +138,11 @@ class TargetProfileTest {
 
     @Test
     fun strictFirmwareProfileRejectsSameModelAndKernelOnOtherFirmware() {
-        val fingerprint = "samsung/r9q/r9q:16/lizh2-test/G990BXXSLIZH2:user/release-keys"
+        val fingerprint = "samsung/r9qxeea/r9q:16/BP2A.250605.031.A3/G990BXXSLIZH2:user/release-keys"
         val exactRelease = "5.4.289-qgki-32192773-abG990BXXSLIZH2"
         val strict = TargetProfile(
-            profileId = "sm-g990b-lizh2-test",
-            displayName = "SM-G990B LIZH2 test profile",
+            profileId = "sm-g990b-lizh2",
+            displayName = "SM-G990B LIZH2",
             models = setOf("SM-G990B"),
             kernelVersions = setOf(exactRelease),
             buildFingerprints = setOf(fingerprint),
