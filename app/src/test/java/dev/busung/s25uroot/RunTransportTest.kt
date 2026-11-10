@@ -130,4 +130,28 @@ class RunTransportTest {
     fun `the payload cannot decide its own exit code by printing the marker`() {
         assertEquals(1, localAdbExploitExitCode("$ADB_EXIT_MARKER" + "0\nreal output\n$ADB_EXIT_MARKER" + "1\n"))
     }
+
+    @Test
+    fun requiredShizukuCannotFallBackToLocalAdbOrApp() {
+        assertNull(
+            chooseRunTransport(
+                shellRequired = true,
+                shizukuRequested = true,
+                shizukuUsable = false,
+                localAdbPaired = true,
+                shizukuRequired = true,
+            ),
+        )
+        assertEquals(
+            RunTransport.Shizuku,
+            chooseRunTransport(
+                shellRequired = false,
+                shizukuRequested = true,
+                shizukuUsable = true,
+                localAdbPaired = true,
+                shizukuRequired = true,
+            ),
+        )
+    }
+
 }

@@ -136,9 +136,30 @@ class TargetProfileTest {
         )
     }
 
+    @Test
+    fun strictFirmwareProfileRejectsSameModelAndKernelOnOtherFirmware() {
+        val fingerprint = "samsung/r9q/r9q:16/lizh2-test/G990BXXSLIZH2:user/release-keys"
+        val exactRelease = "5.4.289-qgki-32192773-abG990BXXSLIZH2"
+        val strict = TargetProfile(
+            profileId = "sm-g990b-lizh2-test",
+            displayName = "SM-G990B LIZH2 test profile",
+            models = setOf("SM-G990B"),
+            kernelVersions = setOf(exactRelease),
+            buildFingerprints = setOf(fingerprint),
+            requiresShizuku = true,
+            exploit = RemoteArtifact("https://example.invalid/exploit", 1),
+            kernelSu = RemoteArtifact("https://example.invalid/ksud", 1),
+        )
+
+        assertTrue(strict.matches(snapshot("SM-G990B", exactRelease, fingerprint)))
+        assertFalse(strict.matches(snapshot("SM-G990B", exactRelease, "samsung/r9q/r9q:16/other:user/release-keys")))
+        assertFalse(strict.matches(snapshot("SM-G990B", "5.4.289-qgki-32192773-other", fingerprint)))
+    }
+
     private fun snapshot(
         model: String,
         kernelRelease: String,
+        fingerprint: String = "samsung/example",
     ) = DeviceSnapshot(
         manufacturer = "samsung",
         model = model,
@@ -147,7 +168,7 @@ class TargetProfileTest {
         kernelVersionInfo = "#1 SMP PREEMPT",
         machine = "aarch64",
         buildId = "BP4A.251205.006.S938BCZG1",
-        fingerprint = "samsung/example",
+        fingerprint = fingerprint,
         androidRelease = "16",
         sdk = 36,
         abi = "arm64-v8a",

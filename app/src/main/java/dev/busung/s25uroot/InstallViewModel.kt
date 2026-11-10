@@ -1299,6 +1299,9 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
                 // is the first thing to weigh when a run fails - said before the payload runs rather
                 // than left to be found in the sheet afterwards.
                 val matchSnapshot = DeviceSnapshot.current()
+                require(profile.matches(matchSnapshot)) {
+                    "Selected profile does not match this device's model, build fingerprint, and kernel release"
+                }
                 if (profile.kernelMatch(matchSnapshot) == KernelMatch.Version) {
                     appendLog(
                         app.getString(
@@ -1333,8 +1336,14 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
                 val loadKernelSu = AppPreferences.loadKernelSu(app)
                 // The run's own answer to the question above, honoured for the whole run: this is what
                 // makes "Run without Shizuku" mean it rather than asking again a moment later.
-                val shizukuRequested = AppPreferences.shizukuMode(app) && !withoutShizuku
-                val shizukuUsable = ShizukuController.isRunning() && ShizukuController.isGranted()
+                val shizukuRequired = profile.requiresShizuku
+                require(!shizukuRequired || !withoutShizuku) {
+                    "This target requires Shizuku and cannot run without it"
+                }
+                val shizukuRequested = (AppPreferences.shizukuMode(app) || shizukuRequired) && !withoutShizuku
+                val shizukuRunning = ShizukuController.isRunning()
+                val shizukuUsable = shizukuRunning &&
+                    (ShizukuController.isGranted() || shizukuRequired && !unattended)
                 // The gate has already waited for Shizuku, so a binder that is missing here is not the
                 // thing to fall back from: this run was started on the promise that it would go through
                 // Shizuku, and a payload that runs in the app's process instead is a different run.
@@ -1347,6 +1356,7 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
                     shizukuRequested = shizukuRequested,
                     shizukuUsable = shizukuUsable,
                     localAdbPaired = localAdbPaired,
+                    shizukuRequired = shizukuRequired,
                 ) ?: error(app.getString(shellTransportRefusalStringId(shizukuRequested)))
                 activeRunTransport = transport
                 activeRunShizuku = transport == RunTransport.Shizuku

@@ -43,6 +43,10 @@ data class TargetProfile(
     val displayName: String,
     val models: Set<String>,
     val kernelVersions: Set<String>,
+    /** Exact Android build fingerprints accepted by this profile; empty preserves legacy matching. */
+    val buildFingerprints: Set<String> = emptySet(),
+    /** This target may only execute through a running, granted Shizuku transport. */
+    val requiresShizuku: Boolean = false,
     /**
      * The two fields the official app has no counterpart for, and which are deliberately gone from here.
      *
@@ -108,11 +112,18 @@ data class TargetProfile(
      * coverage, so an entry that declared only that used to be selected by neither and refused by
      * this - a payload a source offers, and a device told nothing covers it.
      */
+    fun matchesFirmware(snapshot: DeviceSnapshot): Boolean =
+        buildFingerprints.isEmpty() || snapshot.fingerprint in buildFingerprints
+
     fun matchesKernelVersion(snapshot: DeviceSnapshot): Boolean =
-        snapshot.kernelVersion in kernelVersions || snapshot.kernelRelease in kernelVersions
+        if (buildFingerprints.isNotEmpty()) {
+            snapshot.kernelRelease in kernelVersions
+        } else {
+            snapshot.kernelVersion in kernelVersions || snapshot.kernelRelease in kernelVersions
+        }
 
     fun matches(snapshot: DeviceSnapshot): Boolean =
-        matchesDevice(snapshot) && matchesKernelVersion(snapshot)
+        matchesDevice(snapshot) && matchesFirmware(snapshot) && matchesKernelVersion(snapshot)
 
     /** Unique across sources, unlike [profileId], which two sources may both offer. */
     val selectionId: String
@@ -225,6 +236,8 @@ data class SupportManifest(
                             displayName = payload.getString("displayName"),
                             models = payload.getJSONArray("models").strings(),
                             kernelVersions = payload.getJSONArray("kernelVersions").strings(),
+                            buildFingerprints = payload.optJSONArray("buildFingerprints")?.strings() ?: emptySet(),
+                            requiresShizuku = payload.optBoolean("requiresShizuku", false),
                             exploit = exploit.artifact(),
                             kernelSu = kernelSu.artifact(),
                             kernelSuVersion = kernelSu.declaredVersion(),

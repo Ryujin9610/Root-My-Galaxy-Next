@@ -43,7 +43,10 @@ internal fun chooseRunTransport(
     shizukuRequested: Boolean,
     shizukuUsable: Boolean,
     localAdbPaired: Boolean,
+    shizukuRequired: Boolean = false,
 ): RunTransport? = when {
+    shizukuRequired ->
+        if (shizukuRequested && shizukuUsable) RunTransport.Shizuku else null
     shellRequired -> when {
         shizukuRequested && shizukuUsable -> RunTransport.Shizuku
         localAdbPaired -> RunTransport.LocalAdb
