@@ -113,10 +113,14 @@ data class TargetProfile(
      * this - a payload a source offers, and a device told nothing covers it.
      */
     fun matchesFirmware(snapshot: DeviceSnapshot): Boolean =
-        buildFingerprints.isEmpty() || snapshot.fingerprint in buildFingerprints
+        if (requiresShizuku || buildFingerprints.isNotEmpty()) {
+            buildFingerprints.isNotEmpty() && snapshot.fingerprint in buildFingerprints
+        } else {
+            true
+        }
 
     fun matchesKernelVersion(snapshot: DeviceSnapshot): Boolean =
-        if (buildFingerprints.isNotEmpty()) {
+        if (requiresShizuku || buildFingerprints.isNotEmpty()) {
             snapshot.kernelRelease in kernelVersions
         } else {
             snapshot.kernelVersion in kernelVersions || snapshot.kernelRelease in kernelVersions
