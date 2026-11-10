@@ -152,7 +152,8 @@ class TargetProfileTest {
         )
 
         assertTrue(strict.matches(snapshot("SM-G990B", exactRelease, fingerprint)))
-        assertFalse(strict.matches(snapshot("SM-G990B", exactRelease, "samsung/r9q/r9q:16/other:user/release-keys")))
+        val otherFirmwareFingerprint = fingerprint.replace("G990BXXSLIZH2", "G990BXXSKIZE1")
+        assertFalse(strict.matches(snapshot("SM-G990B", exactRelease, otherFirmwareFingerprint)))
         assertFalse(strict.matches(snapshot("SM-G990B", "5.4.289-qgki-32192773-other", fingerprint)))
     }
 
