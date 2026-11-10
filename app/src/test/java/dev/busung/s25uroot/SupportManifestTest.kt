@@ -257,10 +257,10 @@ class SupportManifestTest {
             """
             {"schemaVersion":3,"payloads":[{
               "payloadId":"sm-g990b-lizh2",
-              "displayName":"SM-G990B LIZH2 (test)",
+              "displayName":"SM-G990B LIZH2",
               "models":["SM-G990B"],
               "kernelVersions":["5.4.289-qgki-32192773-abG990BXXSLIZH2"],
-              "buildFingerprints":["samsung/r9q/r9q:16/lizh2-test/G990BXXSLIZH2:user/release-keys"],
+              "buildFingerprints":["samsung/r9qxeea/r9q:16/BP2A.250605.031.A3/G990BXXSLIZH2:user/release-keys"],
               "requiresShizuku":true,
               "exploit":{"url":"https://example.invalid/exploit","size":4096},
               "kernelsu":{"url":"https://example.invalid/ksud","size":8192}
@@ -268,7 +268,7 @@ class SupportManifestTest {
             """.trimIndent().toByteArray(),
         )
         val profile = parsed.targets.single()
-        assertEquals(setOf("samsung/r9q/r9q:16/lizh2-test/G990BXXSLIZH2:user/release-keys"), profile.buildFingerprints)
+        assertEquals(setOf("samsung/r9qxeea/r9q:16/BP2A.250605.031.A3/G990BXXSLIZH2:user/release-keys"), profile.buildFingerprints)
         assertTrue(profile.requiresShizuku)
     }
 
