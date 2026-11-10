@@ -252,6 +252,58 @@ class SupportManifestTest {
     }
 
     @Test
+    fun shizukuProfilesRequireBothFingerprintAndFullKernelRelease() {
+        val fingerprint = "samsung/r9qxeea/r9q:16/BP2A.250605.031.A3/G990BXXSLIZH2:user/release-keys"
+        val release = "5.4.289-qgki-32192773-abG990BXXSLIZH2"
+        val snapshot = DeviceSnapshot(
+            manufacturer = "samsung",
+            model = "SM-G990B",
+            device = "r9q",
+            kernelRelease = release,
+            kernelVersionInfo = "#1 SMP PREEMPT",
+            machine = "aarch64",
+            buildId = "G990BXXSLIZH2",
+            fingerprint = fingerprint,
+            androidRelease = "16",
+            sdk = 36,
+            abi = "arm64-v8a",
+            pageSize = 4096,
+        )
+
+        fun parse(kernelVersion: String, fingerprintField: String = ""): TargetProfile =
+            SupportManifest.parse(
+                """
+                {"schemaVersion":3,"payloads":[{
+                  "payloadId":"r9q-G990BXXSLIZH2",
+                  "displayName":"SM-G990B LIZH2",
+                  "models":["SM-G990B"],
+                  "kernelVersions":["$kernelVersion"],
+                  $fingerprintField
+                  "requiresShizuku":true,
+                  "exploit":{"url":"https://example.invalid/exploit","size":4096},
+                  "kernelsu":{"url":"https://example.invalid/ksud","size":8192}
+                }]}
+                """.trimIndent().toByteArray(),
+            ).targets.single()
+
+        val missingBoth = parse("5.4.289")
+        val missingFingerprint = parse(release)
+        val missingFullRelease = parse(
+            "5.4.289",
+            fingerprintField = "\"buildFingerprints\":[\"$fingerprint\"],",
+        )
+        val complete = parse(
+            release,
+            fingerprintField = "\"buildFingerprints\":[\"$fingerprint\"],",
+        )
+
+        assertNull(listOf(missingBoth).resolveFor(snapshot))
+        assertNull(listOf(missingFingerprint).resolveFor(snapshot))
+        assertNull(listOf(missingFullRelease).resolveFor(snapshot))
+        assertEquals("r9q-G990BXXSLIZH2", listOf(complete).resolveFor(snapshot)?.profileId)
+    }
+
+    @Test
     fun readsExactBuildFingerprintAndShizukuRequirement() {
         val parsed = SupportManifest.parse(
             """
